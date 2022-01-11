@@ -1,0 +1,54 @@
+version: "3.3"
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    restart: on-failure
+    container_name: backend
+    volumes:
+      - /app/node_modules
+    ports:
+      - '8080:8080'
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./.env
+    networks:
+      - app-network
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.dev
+    ports:
+      - '3000:3000'
+    volumes:
+      - /app/node_modules
+    restart: on-failure
+    container_name: client 
+    networks:
+      - app-network
+  nginx:
+    depends_on:
+      - client
+      - backend
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    ports:
+      - '80:80'
+    container_name: nginx
+    networks:
+      - app-network
+  mongo:
+    image: 'mongo'
+    container_name: 'mongo'
+    ports:
+      - '27017-27019:27017-27019'
+    networks:
+      - app-network
+
+networks:
+  app-network:
+      driver: bridge
